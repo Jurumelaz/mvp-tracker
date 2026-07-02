@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MVP Construção — Estrutura em 7 dias</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12333b; --ink-soft:#3d5a62; --obra:#c8632e; --obra-deep:#a34e21;
+    --paper:#ecefe9; --card:#ffffff; --line:#d9ded6; --muted:#6b7a72;
+    --ok:#2f7d4f; --ok-soft:#e4f0e8;
+    --disp:'Space Grotesk',system-ui,sans-serif;
+    --body:'Inter',system-ui,-apple-system,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--body);background:var(--paper);color:var(--ink);
+       line-height:1.5;-webkit-font-smoothing:antialiased;padding-bottom:60px}
+  .wrap{max-width:760px;margin:0 auto;padding:0 16px}
+
+  /* Sticky header */
+  header{position:sticky;top:0;z-index:20;background:var(--ink);color:#fff;
+         box-shadow:0 2px 14px rgba(18,51,59,.18)}
+  .head-inner{max-width:760px;margin:0 auto;padding:14px 16px}
+  .eyebrow{font-family:var(--disp);font-weight:600;letter-spacing:.16em;
+           text-transform:uppercase;font-size:11px;color:#8fb8b3;margin-bottom:2px}
+  h1{font-family:var(--disp);font-weight:700;font-size:19px;letter-spacing:-.01em;line-height:1.15}
+  .bar-row{display:flex;align-items:center;gap:12px;margin-top:11px}
+  .bar{flex:1;height:9px;background:rgba(255,255,255,.16);border-radius:20px;overflow:hidden}
+  .bar-fill{height:100%;width:0;background:linear-gradient(90deg,var(--obra),#e08a4f);
+            border-radius:20px;transition:width .5s cubic-bezier(.4,0,.2,1)}
+  .bar-pct{font-family:var(--disp);font-weight:700;font-size:15px;min-width:42px;text-align:right}
+  .bar-count{font-size:12px;color:#8fb8b3;margin-top:5px}
+
+  .intro{padding:20px 0 6px}
+  .intro p{color:var(--ink-soft);font-size:14px}
+  .goal{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--obra);
+        border-radius:10px;padding:12px 14px;margin-top:14px;font-size:13.5px;color:var(--ink-soft)}
+  .goal b{color:var(--ink)}
+
+  /* Day card */
+  .day{background:var(--card);border:1px solid var(--line);border-radius:14px;
+       margin-top:16px;overflow:hidden;transition:box-shadow .2s}
+  .day.done{box-shadow:0 0 0 2px var(--ok) inset}
+  .day-head{display:flex;align-items:center;gap:13px;padding:15px 16px;cursor:pointer;
+            user-select:none;position:relative}
+  .daynum{font-family:var(--disp);font-weight:700;font-size:15px;width:38px;height:38px;
+          flex:none;border-radius:9px;background:var(--ink);color:#fff;
+          display:grid;place-items:center;transition:background .25s}
+  .day.done .daynum{background:var(--ok)}
+  .day-t{flex:1;min-width:0}
+  .day-t h2{font-family:var(--disp);font-weight:600;font-size:15.5px;letter-spacing:-.01em}
+  .day-t .sub{font-size:12px;color:var(--muted);margin-top:1px}
+  .day-prog{font-family:var(--disp);font-weight:600;font-size:12px;color:var(--muted);
+            flex:none;background:var(--paper);padding:3px 9px;border-radius:20px}
+  .day.done .day-prog{background:var(--ok-soft);color:var(--ok)}
+  .chev{flex:none;width:20px;height:20px;color:var(--muted);transition:transform .25s}
+  .day.open .chev{transform:rotate(180deg)}
+
+  .tasks{max-height:0;overflow:hidden;transition:max-height .35s ease}
+  .tasks-inner{padding:2px 16px 8px}
+
+  .task{border-top:1px solid var(--line);padding:12px 0;display:flex;gap:12px;align-items:flex-start}
+  .task:first-child{border-top:none}
+  .cb{flex:none;width:24px;height:24px;border:2px solid var(--ink-soft);border-radius:7px;
+      background:transparent;cursor:pointer;display:grid;place-items:center;transition:all .18s;margin-top:1px}
+  .cb:hover{border-color:var(--obra)}
+  .cb svg{width:15px;height:15px;stroke:#fff;stroke-width:3.2;fill:none;opacity:0;transition:opacity .15s}
+  .cb.on{background:var(--ok);border-color:var(--ok)}
+  .cb.on svg{opacity:1}
+  .t-body{flex:1;min-width:0}
+  .t-label{font-size:14.5px;font-weight:500;cursor:pointer;transition:color .15s}
+  .t-label .plus{color:var(--obra);font-weight:600;font-size:12px;margin-left:6px;white-space:nowrap}
+  .task.checked .t-label{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+  .t-desc{max-height:0;overflow:hidden;transition:max-height .3s ease}
+  .t-desc-in{font-size:13px;color:var(--ink-soft);padding-top:7px;line-height:1.55}
+  .t-desc-in code{background:var(--paper);padding:1px 6px;border-radius:5px;font-size:12px;color:var(--obra-deep)}
+
+  .feito{background:var(--paper);margin:4px 16px 16px;border-radius:9px;padding:9px 12px;
+         font-size:12.5px;color:var(--ink-soft);display:flex;gap:8px;align-items:flex-start}
+  .feito b{color:var(--ink);font-family:var(--disp);font-weight:600}
+  .flag{color:var(--ok)}
+
+  /* Parallel + reference blocks */
+  .section-label{font-family:var(--disp);font-weight:600;letter-spacing:.12em;text-transform:uppercase;
+                 font-size:11px;color:var(--muted);margin:26px 0 4px;padding-left:2px}
+  .note{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:8px}
+  .note h3{font-family:var(--disp);font-weight:600;font-size:15px;margin-bottom:4px}
+  .note p{font-size:13.5px;color:var(--ink-soft)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:12.5px}
+  th{background:var(--ink);color:#fff;text-align:left;padding:8px 10px;font-family:var(--disp);font-weight:600;font-size:12px}
+  td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;color:var(--ink-soft)}
+  tr:nth-child(even) td{background:var(--paper)}
+  .method{font-size:13px;color:var(--ink-soft);margin-top:12px;padding:11px 13px;
+          border-left:4px solid var(--obra);background:var(--paper);border-radius:8px}
+  .method b{color:var(--ink)}
+
+  footer{margin-top:26px;text-align:center}
+  .share{font-family:var(--body);font-size:12.5px;color:#fff;background:var(--obra);
+         border:none;border-radius:8px;padding:9px 16px;cursor:pointer;margin-right:8px;font-weight:500}
+  .share:hover{background:var(--obra-deep)}
+  .reset{font-family:var(--body);font-size:12.5px;color:var(--muted);background:none;
+         border:1px solid var(--line);border-radius:8px;padding:8px 16px;cursor:pointer}
+  .reset:hover{border-color:var(--obra);color:var(--obra)}
+  .banner{background:var(--ink);color:#fff;border-radius:12px;padding:13px 15px;margin-top:18px;font-size:13px;line-height:1.5}
+  .banner b{font-family:var(--disp);font-weight:600}
+  .banner a{color:#9fd0cb;cursor:pointer;text-decoration:underline}
+  .saved{font-size:11px;color:var(--muted);margin-top:12px;min-height:14px;transition:opacity .3s}
+
+  :focus-visible{outline:2px solid var(--obra);outline-offset:2px;border-radius:4px}
+  @media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header>
+  <div class="head-inner">
+    <div class="eyebrow">MVP · Construção</div>
+    <h1>Estrutura armada em 7 dias</h1>
+    <div class="bar-row">
+      <div class="bar"><div class="bar-fill" id="fill"></div></div>
+      <div class="bar-pct" id="pct">0%</div>
+    </div>
+    <div class="bar-count" id="count">0 de 0 etapas concluídas</div>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="intro">
+    <p>Marque cada etapa conforme faz. Toque no título da tarefa para ver a descrição. O progresso sincroniza ao vivo — quem abrir o link vê o mesmo, na hora.</p>
+    <div class="goal">
+      <b>Objetivo real:</b> não é faturar na semana — é armar a estrutura e aprender a operar o mecanismo.
+      <b>Métrica da semana seguinte:</b> 2 a 5 conversas/orçamentos reais (não "trabalho fechado").
+    </div>
+  </div>
+
+  <div id="days"></div>
+
+  <div class="section-label">Em paralelo · não trava o lançamento</div>
+  <div class="day" data-parallel="1"></div>
+
+  <div class="section-label">Referência · depois dos 7 dias</div>
+  <div class="note">
+    <h3>Onde o funil trava, e o que investigar</h3>
+    <p>Estrutura armada, você vira investigador. Ache onde trava e mude <b>uma variável por vez</b>.</p>
+    <table>
+      <tr><th>Onde trava</th><th>Investigar primeiro</th></tr>
+      <tr><td>Sem alcance / impressões</td><td>Orçamento baixo demais ou segmentação estreita</td></tr>
+      <tr><td>Tem alcance, ninguém clica/escreve</td><td>Criativo e oferta — foto e primeira linha</td></tr>
+      <tr><td>Escreve, não vira conversa</td><td>Sua resposta — velocidade e triagem</td></tr>
+      <tr><td>Conversa, não vira visita/orçamento</td><td>Confiança, preço esperado ou encaixe</td></tr>
+      <tr><td>Orçamento, não fecha</td><td>Preço, apresentação, timing, follow-up</td></tr>
+    </table>
+    <div class="method"><b>Método:</b> muda uma coisa, observa, registra. Nunca duas ao mesmo tempo — senão você não sabe qual causou o efeito. É entender o mecanismo no micro pra operar no macro.</div>
+  </div>
+
+  <footer>
+    <button class="reset" id="reset">Zerar progresso</button>
+    <div class="saved" id="saved"></div>
+  </footer>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { getDatabase, ref, onValue, set, remove } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQ-9KoX2LvHB7D6BQD_Wmv4hO0iIN3Hzs",
+  authDomain: "mvp-tracker-e3611.firebaseapp.com",
+  databaseURL: "https://mvp-tracker-e3611-default-rtdb.firebaseio.com",
+  projectId: "mvp-tracker-e3611",
+  storageBucket: "mvp-tracker-e3611.firebasestorage.app",
+  messagingSenderId: "248413354403",
+  appId: "1:248413354403:web:04f3708536b8d3f17d0216"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const DATA = [
+  { n:1, title:"Fundação: identidade + oferta + zona", sub:"A base — tudo pendura aqui",
+    feito:"nome + logo provisório + oferta escrita + zona definida + pedido de fotos enviado",
+    tasks:[
+      {id:"d1t1", label:"Nome provisório (máx 30 min)", desc:"Cadeado de 30 minutos, de propósito — você trava no naming e nome nenhum traz cliente; anúncio traz. Critérios: fácil de falar, dá pra registrar @ e um domínio simples, e não te prende a um só serviço. Bom-o-suficiente, não perfeito."},
+      {id:"d1t2", label:"Logo provisório simples", desc:"Irmão ou um gerador online. Não precisa ser final — serve só pra dar cara ao WhatsApp e à página."},
+      {id:"d1t3", label:"Oferta numa frase + menu de 4 serviços", desc:"Ex.: <code>Reformas prolijas de baños, dormitorios, pisos y cielorrasos. Calidad sin dolores de cabeza. Presupuesto sin cargo.</code> Menu: banheiro, quarto, teto, piso."},
+      {id:"d1t4", label:"Definir 1 zona inicial", desc:"Uma só. Foca o anúncio e a futura lista de contatos. Escolha onde há mais do seu cliente A."},
+      {id:"d1t5", label:"Pedir fotos de obras aos 2 profissionais", desc:"Caminho crítico: depende deles responderem, então dispara hoje pra não travar o Dia 3 e o 4. Antes/depois que tiverem no celular — é trabalho deles, que vocês executam juntos, então é verdade usar."},
+    ]},
+  { n:2, title:"Canal de contato: WhatsApp Business", sub:"Onde a consulta chega",
+    feito:"WhatsApp Business no ar e testado por você (mande uma mensagem e veja a saudação responder)",
+    tasks:[
+      {id:"d2t1", label:"Instalar e configurar o WhatsApp Business", desc:"Nome, foto (logo), descrição curta, horário e zona."},
+      {id:"d2t2", label:"Mensagem de saudação + ausência automáticas", desc:"Resposta imediata dá sensação de empresa organizada — parte do 'sem dor de cabeça'."},
+      {id:"d2t3", label:"Respostas rápidas de triagem", desc:"Atalhos com as perguntas-filtro: <code>tipo de trabajo</code>, <code>zona</code>, <code>¿para vivienda propia o para alquilar/vender?</code>"},
+      {id:"d2t4", label:"Catálogo com os 4 serviços", desc:"Cada serviço com 1 linha de descrição."},
+    ]},
+  { n:3, title:"Conteúdo: textos + fotos", sub:"Matéria-prima da página e do anúncio",
+    feito:"textos prontos + pasta de imagens organizada (reais + ilustrativas rotuladas)",
+    tasks:[
+      {id:"d3t1", label:"Reunir e organizar as fotos reais", desc:"Antes/depois que os profissionais mandaram, separadas e nomeadas."},
+      {id:"d3t2", label:"Onde faltar, escolher ilustrativa rotulada", desc:"Régua: foto real é prova; ilustrativa pode, desde que <b>pareça</b> ilustrativa; foto de terceiro passada como sua, nunca."},
+      {id:"d3t3", label:"Escrever os textos (página, anúncio, garantia)", desc:"Página, anúncio e o bloco 'cómo trabajamos / garantía'. Me peça os rascunhos prontos pra ajustar."},
+      {id:"d3t4", label:"Definir os 3 momentos de acompanhamento", desc:"Começou / virada da obra / terminou. Uns 3 WhatsApps na obra inteira — é isso que vende 'sem dor de cabeça' e te diferencia do pedreiro avulso."},
+    ]},
+  { n:4, title:"Página web (irmão) + Perfil no Google", sub:"A camada de confiança",
+    feito:"página no ar com link + botão de WhatsApp funcionando + perfil Google criado",
+    tasks:[
+      {id:"d4t1", label:"Irmão monta a página de 1 tela", desc:"Como o canal é frio e pago, a página faz o trabalho que a indicação faria. Estrutura: oferta no topo, menu de serviços, 'trabajos realizados' (fotos), 'cómo trabajamos / garantía', botão de WhatsApp bem visível."},
+      {id:"d4t2", label:"Criar o Perfil de Empresa no Google", desc:"Grátis. Aparece no Maps e na busca local sem pagar anúncio."},
+    ]},
+  { n:5, title:"Alinhar profissionais + roteiro de visita", sub:"Onde seu comportamento fica blindado",
+    feito:"os 2 profissionais alinhados + você confortável com as 3 falas-âncora",
+    tasks:[
+      {id:"d5t1", label:"Combinar o mecanismo com os 2 profissionais", desc:"O preço passa por você (eles não dizem valor na frente do cliente); ponte de validação externa — se falarem de dinheiro, eles dizem <code>los valores los maneja él</code>; fluxo do dinheiro pelo Caminho 1 (cliente paga o profissional, ele te repassa sua parte); papéis (você = responsável pela obra, ele = oficial que executa)."},
+      {id:"d5t2", label:"Treinar o roteiro de visita (3 falas-âncora)", desc:"Papel + protocolo, não personagem. Decide-se uma vez, usa-se sempre — tira a improvisação, que é o que te trava. Me peça as 3 falas por escrito em espanhol."},
+    ]},
+  { n:6, title:"Montar o anúncio no Meta (sem subir)", sub:"O motor de aquisição",
+    feito:"campanha montada e revisada, pronta pra publicar com um clique",
+    tasks:[
+      {id:"d6t1", label:"Criar conta no Meta Ads Manager", desc:"Configure <b>Uruguai + UYU desde o início</b> — é o que libera o pagamento por Redpagos (sem cartão)."},
+      {id:"d6t2", label:"Montar 1 campanha (mensagens / WhatsApp)", desc:"Público: sua zona, 35+, interesses de imóveis/lar/decoração. Criativo: melhor foto + texto do Dia 3 (primeira linha forte). Orçamento: <code>US$ 1–3/dia</code> — pode começar no piso e subir só se houver sinal."},
+      {id:"d6t3", label:"Não usar o botão 'Impulsar/Promocionar'", desc:"Sempre pelo Ads Manager. O botão limita segmentação, não faz remarketing nem otimiza por conversão — é a forma mais cara de gastar."},
+    ]},
+  { n:7, title:"Subir + montar o método de diagnóstico", sub:"Estrutura no ar",
+    feito:"anúncio rodando + planilha criada + você sabe exatamente o que vai medir",
+    tasks:[
+      {id:"d7t1", label:"Publicar a campanha", desc:"Sobe o anúncio. A estrutura está no ar."},
+      {id:"d7t2", label:"Criar a planilha de acompanhamento", desc:"Colunas: <code>data | fonte | tipo de trabalho | zona | virou conversa? | virou visita/orçamento?</code>"},
+      {id:"d7t3", label:"Fixar a métrica + ler a árvore de diagnóstico", desc:"Meta da semana seguinte: 2–5 conversas/orçamentos. Depois é investigar o funil (seção de referência abaixo)."},
+    ]},
+];
+
+const PARALLEL = { title:"Validar com um contador (30 min)", sub:"Transforma o gatilho de saída em número",
+  feito:"as 3 respostas na mão — aí você sabe exatamente quando formalizar",
+  tasks:[
+    {id:"pc1", label:"Movimentação na conta pessoal chama atenção de BPS/DGI?", desc:"No Caminho 1 quase some (só seus ~10k por trabalho passam), mas confirme com quem entende."},
+    {id:"pc2", label:"Custo real de abrir e manter a estrutura mínima", desc:"Unipersonal vs Sociedad de Hecho, monotributo — atualize o número."},
+    {id:"pc3", label:"A partir de que faturamento é obrigatório cobrar IVA?", desc:"Define o teto do monotributo e o momento de migrar."},
+  ]};
+
+let state = {};
+const $ = s => document.querySelector(s);
+
+// Firebase Realtime Database — progresso compartilhado ao vivo
+const stateRef = ref(db, "progress");
+
+async function writeState(){
+  try{ await set(stateRef, state); flashSaved("Salvo na nuvem"); }
+  catch(e){ flashSaved("Sem conexão agora — marque de novo em instantes"); }
+}
+async function clearState(){
+  try{ await remove(stateRef); }catch(e){}
+}
+
+function allTasks(){ return [...DATA.flatMap(d=>d.tasks), ...PARALLEL.tasks]; }
+
+function buildDay(d, host, parallel){
+  const done = d.tasks.filter(t=>state[t.id]).length;
+  const total = d.tasks.length;
+  const el = host;
+  el.className = "day" + (done===total ? " done":"");
+  el.innerHTML = `
+    <div class="day-head" role="button" tabindex="0" aria-expanded="false">
+      <div class="daynum">${parallel ? "★" : d.n}</div>
+      <div class="day-t"><h2>${d.title}</h2><div class="sub">${d.sub}</div></div>
+      <div class="day-prog">${done}/${total}</div>
+      <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+    <div class="tasks"><div class="tasks-inner">
+      ${d.tasks.map(t=>`
+        <div class="task ${state[t.id]?'checked':''}" data-id="${t.id}">
+          <button class="cb ${state[t.id]?'on':''}" aria-label="Concluir etapa">
+            <svg viewBox="0 0 24 24"><path d="M5 12l5 5L20 6"/></svg>
+          </button>
+          <div class="t-body">
+            <div class="t-label">${t.label}<span class="plus">ver +</span></div>
+            <div class="t-desc"><div class="t-desc-in">${t.desc}</div></div>
+          </div>
+        </div>`).join("")}
+    </div>
+    <div class="feito"><span class="flag">✓</span><div><b>Feito quando:</b> ${d.feito}</div></div>
+    </div>`;
+
+  const head = el.querySelector(".day-head");
+  const tasksBox = el.querySelector(".tasks");
+  const toggleDay = ()=>{
+    const open = el.classList.toggle("open");
+    head.setAttribute("aria-expanded", open);
+    tasksBox.style.maxHeight = open ? tasksBox.scrollHeight+"px" : "0";
+  };
+  head.addEventListener("click", toggleDay);
+  head.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();toggleDay();}});
+
+  el.querySelectorAll(".task").forEach(taskEl=>{
+    const id = taskEl.dataset.id;
+    const cb = taskEl.querySelector(".cb");
+    const label = taskEl.querySelector(".t-label");
+    const desc = taskEl.querySelector(".t-desc");
+    const plus = taskEl.querySelector(".plus");
+    cb.addEventListener("click", e=>{ e.stopPropagation(); toggle(id); });
+    label.addEventListener("click", ()=>{
+      const open = desc.style.maxHeight && desc.style.maxHeight!=="0px";
+      desc.style.maxHeight = open ? "0" : desc.scrollHeight+"px";
+      plus.textContent = open ? "ver +" : "ocultar";
+      if(el.classList.contains("open")) tasksBox.style.maxHeight = tasksBox.scrollHeight+"px";
+    });
+  });
+  return {done,total};
+}
+
+function render(){
+  const host = $("#days");
+  host.innerHTML = "";
+  DATA.forEach(d=>{ const div=document.createElement("div"); host.appendChild(div); buildDay(d,div,false); });
+  buildDay(PARALLEL, document.querySelector('[data-parallel]'), true);
+  updateProgress();
+}
+
+function updateProgress(){
+  const all = allTasks();
+  const done = all.filter(t=>state[t.id]).length;
+  const pct = all.length ? Math.round(done/all.length*100) : 0;
+  $("#fill").style.width = pct+"%";
+  $("#pct").textContent = pct+"%";
+  $("#count").textContent = `${done} de ${all.length} etapas concluídas` + (pct===100 ? " — estrutura armada 🏗️":"");
+}
+
+async function toggle(id){
+  state[id] = !state[id];
+  // update just the affected task/day without collapsing others
+  const taskEl = document.querySelector(`.task[data-id="${id}"]`);
+  if(taskEl){
+    const cb = taskEl.querySelector(".cb");
+    cb.classList.toggle("on", !!state[id]);
+    taskEl.classList.toggle("checked", !!state[id]);
+    const dayEl = taskEl.closest(".day");
+    const total = dayEl.querySelectorAll(".task").length;
+    const done = dayEl.querySelectorAll(".task.checked").length;
+    dayEl.querySelector(".day-prog").textContent = `${done}/${total}`;
+    dayEl.classList.toggle("done", done===total);
+    if(dayEl.classList.contains("open")){
+      const tb = dayEl.querySelector(".tasks"); tb.style.maxHeight = tb.scrollHeight+"px";
+    }
+  }
+  updateProgress();
+  await writeState();
+}
+
+let savedTimer;
+function flashSaved(msg){
+  const el=$("#saved"); el.textContent=msg; el.style.opacity="1";
+  clearTimeout(savedTimer);
+  savedTimer=setTimeout(()=>{ el.style.opacity="0"; }, 1600);
+}
+
+function subscribe(){
+  onValue(stateRef, (snap)=>{
+    const remote = snap.val() || {};
+    if(JSON.stringify(remote) === JSON.stringify(state)) return; // ignora eco da própria escrita
+    state = remote;
+    render();
+  });
+}
+
+$("#reset").addEventListener("click", async ()=>{
+  if(!confirm("Zerar todo o progresso? Isso vale para você e para quem acompanha. Não dá pra desfazer.")) return;
+  state = {};
+  await clearState();
+  render();
+  flashSaved("Progresso zerado");
+});
+
+render();
+subscribe();
+</script>
+</body>
+</html>
